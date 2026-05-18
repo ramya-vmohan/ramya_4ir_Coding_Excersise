@@ -6,6 +6,7 @@ Thanks.
 
 the workspace for this monitoring the application is <your present working directory>/ramya_4ir_Coding_Excersise/kubernetes-ts-guestbook/components
 
+cd <your present working directory>/ramya_4ir_Coding_Excersise/kubernetes-ts-guestbook/components
 
 # Pulumi Kubernetes Guestbook Monitoring Project
 
