@@ -1,94 +1,241 @@
-[![Deploy](https://get.pulumi.com/new/button.svg)](https://app.pulumi.com/new)
+Dear Hiring Manager,
 
-# Kubernetes Guestbook (with Components)
+Please find the below documentation for the Pulumi Kubernetes Guestbook Monitoring assignment with required prerequisites and steps to deploy.
 
-A version of the [Kubernetes Guestbook](https://kubernetes.io/docs/tutorials/stateless-application/guestbook/)
-application using Pulumi. Unlike [the straight port of the original YAML](../simple), this variant
-leverages real code to eliminate boilerplate. A `ServiceDeployment` class is used that combines the common pattern
-of deploying a container image using a Kubernetes `Deployment`, and then scaling it using a `Service`.
+Thanks.
+# Pulumi Kubernetes Guestbook Monitoring Project
 
-## Running the App
+## Overview
 
-Follow the steps in [Pulumi Installation](https://pulumi.io/install/) and [Kubernetes Setup](https://pulumi.io/quickstart/kubernetes/setup.html) to get Pulumi working with Kubernetes.
+This project extends the Pulumi Kubernetes Guestbook example by integrating Prometheus and Grafana monitoring into a Kubernetes cluster running on an Ubuntu EC2 instance with k3s.
 
-Install dependencies:
+The implementation includes:
 
-```sh
+* Guestbook application deployment using Pulumi
+* Prometheus monitoring stack
+* Grafana visualization dashboard
+* Metrics scraping configuration for Guestbook services
+* Grafana exposure using NodePort services
+
+---
+
+# Prerequisites
+
+Before deployment, ensure the following are installed on the EC2 instance:
+
+* Docker
+* k3s Kubernetes cluster
+* kubectl
+* Node.js (v20 or later)
+* Pulumi CLI
+
+---
+
+# Project Structure
+
+```bash
+kubernetes-ts-guestbook/components/
+│
+├── index.ts
+├── monitoring.ts
+├── k8sjs.ts
+├── package.json
+├── Pulumi.yaml
+└── README.md
+```
+
+---
+
+# Deployment Instructions
+
+## 1. Clone Repository
+
+```bash
+unzip kubernetes-ts-guestbook.zip
+cd kubernetes-ts-guestbook/components/
+```
+
+## 2. Install Dependencies
+
+```bash
 npm install
 ```
 
-Create a new stack:
+## 3. Login to Pulumi
 
-```sh
-$ pulumi stack init
-Enter a stack name: guestbook
+```bash
+pulumi login --local
 ```
 
-This example will attempt to expose the Guestbook application to the Internet with a `Service` of
-type `LoadBalancer`. Since minikube does not support `LoadBalancer`, the Guestbook application
-already knows to use type `ClusterIP` instead; all you need to do is to tell it whether you're
-deploying to minikube:
+## 4. Create Pulumi Stack
 
-```sh
-pulumi config set isMinikube <value>
+```bash
+pulumi stack init dev
 ```
 
-Perform the deployment:
+## 5. Deploy Application
 
-```sh
-$ pulumi up
-Previewing update (guestbook):
-
-     Type                                Name                      Plan       
- +   pulumi:pulumi:Stack                 guestbook-easy-guestbook  create     
- +   ├─ k8sjs:service:ServiceDeployment  frontend                  create     
- +   │  ├─ kubernetes:apps:Deployment    frontend                  create     
- +   │  └─ kubernetes:core:Service       frontend                  create     
- +   ├─ k8sjs:service:ServiceDeployment  redis-replica             create     
- +   │  ├─ kubernetes:apps:Deployment    redis-replica             create     
- +   │  └─ kubernetes:core:Service       redis-replica             create     
- +   └─ k8sjs:service:ServiceDeployment  redis-master              create     
- +      ├─ kubernetes:apps:Deployment    redis-master              create     
- +      └─ kubernetes:core:Service       redis-master              create     
- 
-Resources:
-    + 10 to create
-
-Do you want to perform this update? yes
-Updating (guestbook):
-
-     Type                                Name                      Status      
- +   pulumi:pulumi:Stack                 guestbook-easy-guestbook  created     
- +   ├─ k8sjs:service:ServiceDeployment  redis-master              created     
- +   │  ├─ kubernetes:apps:Deployment    redis-master              created     
- +   │  └─ kubernetes:core:Service       redis-master              created     
- +   ├─ k8sjs:service:ServiceDeployment  frontend                  created     
- +   │  ├─ kubernetes:apps:Deployment    frontend                  created     
- +   │  └─ kubernetes:core:Service       frontend                  created     
- +   └─ k8sjs:service:ServiceDeployment  redis-replica             created     
- +      ├─ kubernetes:apps:Deployment    redis-replica             created     
- +      └─ kubernetes:core:Service       redis-replica             created     
- 
-Outputs:
-    frontendIp: "10.105.48.30"
-
-Resources:
-    + 10 created
-
-Duration: 21s
-
-Permalink: https://app.pulumi.com/acmecorp/k8sjs-guestbook/updates/1
+```bash
+pulumi up
 ```
 
-And finally - open the application in your browser to see the running application. If you're running
-macOS you can simply run:
+Approve the deployment when prompted.
 
-```sh
-open $(pulumi stack output frontendIp)
+---
+
+# Monitoring Configuration
+
+The monitoring stack is deployed using the `kube-prometheus-stack` Helm chart through Pulumi.
+
+Components installed:
+
+* Prometheus
+* Grafana
+* Alertmanager
+* Node Exporter
+
+The Guestbook frontend service is configured with Prometheus scrape annotations:
+
+```yaml
+annotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "3000"
+  prometheus.io/path: "/metrics"
+```
+http://44.222.110.10:9100/metrics ==> metrics
+---
+
+# Grafana Access Details
+
+## Grafana URL
+## my public IP for the EC2 instance is 44.222.110.10
+```text
+http://44.222.110.10:31771/
 ```
 
-> _Note_: minikube does not support type `LoadBalancer`; if you are deploying to minikube, make sure
-> to run `kubectl port-forward svc/frontend 8080:80` to forward the cluster port to the local
-> machine and access the service via `localhost:8080`.
+## Credentials
 
-![Guestbook in browser](./imgs/guestbook.png)
+```text
+Username: admin
+Password: admin123
+```
+
+---
+
+# Prometheus Access
+
+## Prometheus URL
+
+```text
+http://44.222.110.10:30090/
+```
+
+---
+
+# Verify Guestbook Metrics Scraping
+
+1. Open Prometheus in the browser.
+2. Navigate to:
+
+```text
+Status → Targets
+```
+
+3. Verify that Guestbook-related targets appear with the status:
+
+```text
+UP
+```
+
+4. Open Grafana and verify metrics are visible in dashboards.
+
+---
+
+# Useful Commands
+
+## Check Kubernetes Resources
+
+```bash
+kubectl get all -A
+```
+
+## Check Monitoring Pods
+
+```bash
+kubectl get pods -n monitoring
+```
+
+## Check Services
+
+```bash
+kubectl get svc -n monitoring
+```
+
+---
+
+# Notes
+
+* Services are exposed using NodePort because the deployment runs on a standalone k3s cluster on EC2.
+* Prometheus CRDs were installed manually before Helm deployment to avoid CRD initialization issues.
+
+---
+
+# Notes
+
+* Services are exposed using NodePort because the deployment runs on a standalone k3s cluster on EC2.
+* Prometheus CRDs were installed manually before Helm deployment to avoid CRD initialization issues.
+
+# ########################################################################################################################################################################################################
+
+# Troubleshooting for this deployment:
+
+As I'm not using loadbalancer services like EKS, I'm going to use "node port" instead of load balancer in k8sjs.ts file which is the config file to keep the pulumi up and running in the port.
+thus changed 
+>> In k8sjs.ts filehange => type: LoadBalancer to type: NodePort 
+>> pulumi refresh
+>> pulumi up 
+>> kubectl get svc
+# Guestbook Application:
+http://44.222.110.10:31526/
+
+# Install Prometheus CRDs
+
+As I'm running my application from Ubuntu 26.04 image from EC2 I was required to install prometheus CRDs for enabling the monitoring for guestbook application, you may require the following steps, if you meet this requirement
+
+>> kubectl apply --server-side -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/main/example/prometheus-operator-crd/monitoring.coreos.com_alertmanagerconfigs.yaml
+
+>> kubectl apply --server-side -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/main/example/prometheus-operator-crd/monitoring.coreos.com_alertmanagers.yaml
+
+>> kubectl apply --server-side -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/main/example/prometheus-operator-crd/monitoring.coreos.com_podmonitors.yaml
+
+>> kubectl apply --server-side -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/main/example/prometheus-operator-crd/monitoring.coreos.com_probes.yaml
+
+>> kubectl apply --server-side -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/main/example/prometheus-operator-crd/monitoring.coreos.com_prometheusagents.yaml
+
+>> kubectl apply --server-side -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/main/example/prometheus-operator-crd/monitoring.coreos.com_prometheuses.yaml
+
+>> kubectl apply --server-side -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/main/example/prometheus-operator-crd/monitoring.coreos.com_prometheusrules.yaml
+
+>> kubectl apply --server-side -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/main/example/prometheus-operator-crd/monitoring.coreos.com_scrapeconfigs.yaml
+
+>> kubectl apply --server-side -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/main/example/prometheus-operator-crd/monitoring.coreos.com_servicemonitors.yaml
+
+>> kubectl apply --server-side -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/main/example/prometheus-operator-crd/monitoring.coreos.com_thanosrulers.yaml
+
+>> kubectl get crds | grep monitoring.coreos.com
+
+>> pulumi refresh
+
+>> pulumi up
+
+>> kubectl get pods -n monitoring
+
+>> kubectl get svc -n monitoring
+
+---
+
+
+# Author
+
+Ramya Mohan
+
