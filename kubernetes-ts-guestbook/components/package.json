@@ -2,11 +2,13 @@
   "name": "guestbook-easy",
   "version": "0.1.0",
   "devDependencies": {
-    "@types/node": "^9.3.0"
+    "@types/node": "^22.13.14",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
   },
   "dependencies": {
-    "@pulumi/kubernetes": "latest",
-    "@pulumi/pulumi": "latest"
+    "@pulumi/kubernetes": "^4.30.0",
+    "@pulumi/pulumi": "^3.228.0"
   },
   "license": "MIT"
 }
